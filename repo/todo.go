@@ -36,6 +36,23 @@ func (t *Todo) Get(ctx context.Context, id int64) (model.Todo, error) {
 	return result, nil
 }
 
+func (t *Todo) List(ctx context.Context) ([]model.Todo, error) {
+	results := []model.Todo{}
+	rows, err := t.conn.Query(ctx, "SELECT id, user_id, content, created_at FROM todos")
+	if err != nil {
+		return nil, fmt.Errorf("select failed: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		result := model.Todo{}
+		if err := rows.Scan(&result.ID, &result.UserID, &result.Content, &result.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
 func (t *Todo) Update(ctx context.Context, todo model.Todo) error {
 	if _, err := t.conn.Exec(ctx, "UPDATE todos SET content = $1 WHERE id = $2", todo.Content, todo.ID); err != nil {
 		return fmt.Errorf("update failed: %w", err)
