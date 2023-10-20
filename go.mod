@@ -3,7 +3,9 @@ module github.com/hsmtkk/sturdy-giggle
 go 1.21.0
 
 require (
+	github.com/google/uuid v1.3.1
 	github.com/jackc/pgx/v5 v5.4.3
+	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.2
 	go.uber.org/zap v1.26.0
 )

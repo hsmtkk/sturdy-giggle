@@ -7,17 +7,16 @@ import (
 	"net/http"
 
 	"github.com/hsmtkk/sturdy-giggle/env"
+	"github.com/hsmtkk/sturdy-giggle/repo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
-
-	"github.com/jackc/pgx/v5"
 )
 
 func main() {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
-		log.Fatalf("failed to init zap logger: %w", err)
+		log.Fatalf("failed to init zap logger: %v", err)
 	}
 	defer logger.Sync()
 	sugar := logger.Sugar()
@@ -36,7 +35,7 @@ func main() {
 
 	ctx := context.Background()
 
-	conn, err := connectPostgres(ctx, postgresConfig)
+	conn, err := repo.ConnectPostgres(ctx, postgresConfig)
 	if err != nil {
 		sugar.Fatal(err)
 	}
@@ -73,13 +72,4 @@ func (h *handler) Root(ectx echo.Context) error {
 
 func (h *handler) Healthz(ectx echo.Context) error {
 	return ectx.String(http.StatusOK, "OK")
-}
-
-func connectPostgres(ctx context.Context, pgConfig env.PostgresConfig) (*pgx.Conn, error) {
-	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", pgConfig.User, pgConfig.Password, pgConfig.Host, pgConfig.Port, pgConfig.Database)
-	conn, err := pgx.Connect(ctx, url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect Postgres Database: %w", err)
-	}
-	return conn, nil
 }
