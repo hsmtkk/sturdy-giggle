@@ -19,7 +19,7 @@ func NewUser(conn *pgx.Conn) *User {
 	return &User{conn}
 }
 
-func (u *User) NewUser(ctx context.Context, name string, email string, password string) (model.User, error) {
+func (u *User) New(ctx context.Context, name string, email string, password string) (model.User, error) {
 	result := model.User{}
 	uuid := uuid.New().String()
 	hashedPassword := sha256Hash(password)
@@ -39,4 +39,26 @@ func sha256Hash(plainText string) string {
 	sum := sha256.Sum256([]byte(plainText))
 	hashed := fmt.Sprintf("%x", sum)
 	return hashed
+}
+
+func (u *User) Get(ctx context.Context, id int64) (model.User, error) {
+	result := model.User{}
+	if err := u.conn.QueryRow(ctx, "SELECT id, uuid, name, email, password, created_at FROM users WHERE id = $1", id).Scan(&result.ID, &result.UUID, &result.Name, &result.Email, &result.Password, &result.CreatedAt); err != nil {
+		return result, fmt.Errorf("select failed: %w", err)
+	}
+	return result, nil
+}
+
+func (u *User) Update(ctx context.Context, user model.User) error {
+	if _, err := u.conn.Exec(ctx, "UPDATE users SET name = $1, email = $2 WHERE id = $3", user.Name, user.Email, user.ID); err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+	return nil
+}
+
+func (u *User) Delete(ctx context.Context, user model.User) error {
+	if _, err := u.conn.Exec(ctx, "DELETE FROM users WHERE id = $1", user.ID); err != nil {
+		return fmt.Errorf("delete failed: %w", err)
+	}
+	return nil
 }

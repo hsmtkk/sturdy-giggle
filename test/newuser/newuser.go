@@ -26,9 +26,14 @@ func main() {
 	}
 	defer conn.Close(ctx)
 	userRepo := repo.NewUser(conn)
-	alpha, err := userRepo.NewUser(ctx, "alpha", "alhpa@example.com", "secret")
+	alpha, err := userRepo.New(ctx, "alpha", "alhpa@example.com", "secret")
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("%v\n", alpha)
+	alpha2, err := userRepo.Get(ctx, alpha.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%v\n", alpha2)
 }
