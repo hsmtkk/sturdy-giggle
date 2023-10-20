@@ -4,22 +4,21 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	portStr := os.Getenv("PORT")
-	if portStr == "" {
-		log.Fatal("PORT env var is not defined")
-	}
-	port, err := strconv.Atoi(portStr)
+	port, err := loadEnvInt("PORT")
 	if err != nil {
-		log.Fatalf("failed to parse %s as int: %v", portStr, err)
+		log.Fatal(err)
 	}
+	postgresConfig, err := loadPostgresConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%v\n", postgresConfig) // to suppress error
 
 	// Echo instance
 	e := echo.New()

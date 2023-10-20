@@ -4,5 +4,16 @@ services:
     build: .
     environment:
       PORT: 8080
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: todo
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpassword
     ports:
     - 8080:8080
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpassword
+      POSTGRES_DB: todo
