@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func main() {
@@ -30,6 +33,14 @@ func main() {
 		sugar.Fatal(err)
 	}
 	fmt.Printf("%v\n", postgresConfig) // to suppress error
+
+	ctx := context.Background()
+
+	conn, err := connectPostgres(ctx, postgresConfig)
+	if err != nil {
+		sugar.Fatal(err)
+	}
+	defer conn.Close(ctx)
 
 	// Echo instance
 	e := echo.New()
@@ -62,4 +73,13 @@ func (h *handler) Root(ectx echo.Context) error {
 
 func (h *handler) Healthz(ectx echo.Context) error {
 	return ectx.String(http.StatusOK, "OK")
+}
+
+func connectPostgres(ctx context.Context, pgConfig env.PostgresConfig) (*pgx.Conn, error) {
+	url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", pgConfig.User, pgConfig.Password, pgConfig.Host, pgConfig.Port, pgConfig.Database)
+	conn, err := pgx.Connect(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect Postgres Database: %w", err)
+	}
+	return conn, nil
 }

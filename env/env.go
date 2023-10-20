@@ -34,33 +34,33 @@ func (r *Reader) AsInt(name string) (int, error) {
 }
 
 type PostgresConfig struct {
-	postgresHost     string
-	postgresPort     int
-	postgresDB       string
-	postgresUser     string
-	postgresPassword string
+	Host     string
+	Port     int
+	Database string
+	User     string
+	Password string
 }
 
 func (r *Reader) PostgresConfig() (PostgresConfig, error) {
 	pgConfig := PostgresConfig{}
 	var err error
-	pgConfig.postgresDB, err = r.AsString("POSTGRES_DB")
+	pgConfig.Database, err = r.AsString("POSTGRES_DB")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresHost, err = r.AsString("POSTGRES_HOST")
+	pgConfig.Host, err = r.AsString("POSTGRES_HOST")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresPassword, err = r.AsString("POSTGRES_PASSWORD")
+	pgConfig.Password, err = r.AsString("POSTGRES_PASSWORD")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresPort, err = r.AsInt("POSTGRES_PORT")
+	pgConfig.Port, err = r.AsInt("POSTGRES_PORT")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresUser, err = r.AsString("POSTGRES_USER")
+	pgConfig.User, err = r.AsString("POSTGRES_USER")
 	if err != nil {
 		return pgConfig, err
 	}
