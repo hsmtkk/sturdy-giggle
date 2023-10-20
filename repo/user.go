@@ -21,17 +21,14 @@ func NewUser(conn *pgx.Conn) *User {
 
 func (u *User) New(ctx context.Context, name string, email string, password string) (model.User, error) {
 	result := model.User{}
-	uuid := uuid.New().String()
-	hashedPassword := sha256Hash(password)
-	createdAt := time.Now()
-	if err := u.conn.QueryRow(ctx, `INSERT INTO users (uuid, name, email, password, created_at) values ($1, $2, $3, $4, $5) RETURNING id`, uuid, name, email, hashedPassword, createdAt).Scan(&result.ID); err != nil {
-		return result, fmt.Errorf("insert failed: %w", err)
-	}
-	result.UUID = uuid
+	result.UUID = uuid.New().String()
 	result.Name = name
 	result.Email = email
-	result.Password = password
-	result.CreatedAt = createdAt
+	result.Password = sha256Hash(password)
+	result.CreatedAt = time.Now()
+	if err := u.conn.QueryRow(ctx, `INSERT INTO users (uuid, name, email, password, created_at) values ($1, $2, $3, $4, $5) RETURNING id`, result.UUID, name, email, result.Password, result.CreatedAt).Scan(&result.ID); err != nil {
+		return result, fmt.Errorf("insert failed: %w", err)
+	}
 	return result, nil
 }
 
@@ -56,8 +53,8 @@ func (u *User) Update(ctx context.Context, user model.User) error {
 	return nil
 }
 
-func (u *User) Delete(ctx context.Context, user model.User) error {
-	if _, err := u.conn.Exec(ctx, "DELETE FROM users WHERE id = $1", user.ID); err != nil {
+func (u *User) Delete(ctx context.Context, id int64) error {
+	if _, err := u.conn.Exec(ctx, "DELETE FROM users WHERE id = $1", id); err != nil {
 		return fmt.Errorf("delete failed: %w", err)
 	}
 	return nil
