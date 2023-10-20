@@ -5,18 +5,29 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hsmtkk/sturdy-giggle/env"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.uber.org/zap"
 )
 
 func main() {
-	port, err := loadEnvInt("PORT")
+	logger, err := zap.NewDevelopment()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to init zap logger: %w", err)
 	}
-	postgresConfig, err := loadPostgresConfig()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
+	reader := env.NewReader()
+
+	port, err := reader.AsInt("PORT")
 	if err != nil {
-		log.Fatal(err)
+		sugar.Fatal(err)
+	}
+	postgresConfig, err := reader.PostgresConfig()
+	if err != nil {
+		sugar.Fatal(err)
 	}
 	fmt.Printf("%v\n", postgresConfig) // to suppress error
 
@@ -34,7 +45,9 @@ func main() {
 	e.GET("/healthz", h.Healthz)
 
 	// Start server
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
+	if err := e.Start(fmt.Sprintf(":%d", port)); err != nil {
+		sugar.Fatal(err)
+	}
 }
 
 type handler struct{}

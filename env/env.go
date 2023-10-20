@@ -1,4 +1,4 @@
-package main
+package env
 
 import (
 	"fmt"
@@ -6,7 +6,14 @@ import (
 	"strconv"
 )
 
-func loadEnvString(name string) (string, error) {
+type Reader struct {
+}
+
+func NewReader() *Reader {
+	return &Reader{}
+}
+
+func (r *Reader) AsString(name string) (string, error) {
 	s := os.Getenv(name)
 	if s == "" {
 		return "", fmt.Errorf("%s env var is not defined", name)
@@ -14,8 +21,8 @@ func loadEnvString(name string) (string, error) {
 	return s, nil
 }
 
-func loadEnvInt(name string) (int, error) {
-	s, err := loadEnvString(name)
+func (r *Reader) AsInt(name string) (int, error) {
+	s, err := r.AsString(name)
 	if err != nil {
 		return 0, err
 	}
@@ -26,7 +33,7 @@ func loadEnvInt(name string) (int, error) {
 	return n, nil
 }
 
-type postgresConfig struct {
+type PostgresConfig struct {
 	postgresHost     string
 	postgresPort     int
 	postgresDB       string
@@ -34,26 +41,26 @@ type postgresConfig struct {
 	postgresPassword string
 }
 
-func loadPostgresConfig() (postgresConfig, error) {
-	pgConfig := postgresConfig{}
+func (r *Reader) PostgresConfig() (PostgresConfig, error) {
+	pgConfig := PostgresConfig{}
 	var err error
-	pgConfig.postgresDB, err = loadEnvString("POSTGRES_DB")
+	pgConfig.postgresDB, err = r.AsString("POSTGRES_DB")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresHost, err = loadEnvString("POSTGRES_HOST")
+	pgConfig.postgresHost, err = r.AsString("POSTGRES_HOST")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresPassword, err = loadEnvString("POSTGRES_PASSWORD")
+	pgConfig.postgresPassword, err = r.AsString("POSTGRES_PASSWORD")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresPort, err = loadEnvInt("POSTGRES_PORT")
+	pgConfig.postgresPort, err = r.AsInt("POSTGRES_PORT")
 	if err != nil {
 		return pgConfig, err
 	}
-	pgConfig.postgresUser, err = loadEnvString("POSTGRES_USER")
+	pgConfig.postgresUser, err = r.AsString("POSTGRES_USER")
 	if err != nil {
 		return pgConfig, err
 	}
