@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
-	"net/http"
+	"text/template"
 
 	"github.com/hsmtkk/sturdy-giggle/env"
+	"github.com/hsmtkk/sturdy-giggle/handler"
 	"github.com/hsmtkk/sturdy-giggle/repo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -31,7 +33,6 @@ func main() {
 	if err != nil {
 		sugar.Fatal(err)
 	}
-	fmt.Printf("%v\n", postgresConfig) // to suppress error
 
 	ctx := context.Background()
 
@@ -41,6 +42,10 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
+	userRepo := repo.NewUser(conn)
+	todoRepo := repo.NewTodo(conn)
+	h := handler.New(userRepo, todoRepo)
+
 	// Echo instance
 	e := echo.New()
 
@@ -48,10 +53,14 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	h := newHandler()
+	// Templates
+	t := &Template{
+		templates: template.Must(template.ParseGlob("template/*.html")),
+	}
+	e.Renderer = t
 
 	// Routes
-	e.GET("/", h.Root)
+	e.GET("/", h.Top)
 	e.GET("/healthz", h.Healthz)
 
 	// Start server
@@ -60,16 +69,10 @@ func main() {
 	}
 }
 
-type handler struct{}
-
-func newHandler() *handler {
-	return &handler{}
+type Template struct {
+	templates *template.Template
 }
 
-func (h *handler) Root(ectx echo.Context) error {
-	return ectx.String(http.StatusOK, "Root")
-}
-
-func (h *handler) Healthz(ectx echo.Context) error {
-	return ectx.String(http.StatusOK, "OK")
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
 }
