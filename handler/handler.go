@@ -21,7 +21,7 @@ func newHandler() *Handler {
 }
 
 func (h *Handler) Top(ectx echo.Context) error {
-	return ectx.Render(http.StatusOK, "top", nil)
+	return ectx.Render(http.StatusOK, "top", "Der Wille zur Macht")
 }
 
 func (h *Handler) Healthz(ectx echo.Context) error {
