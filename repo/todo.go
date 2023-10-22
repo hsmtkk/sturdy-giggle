@@ -66,3 +66,20 @@ func (t *Todo) Delete(ctx context.Context, id int64) error {
 	}
 	return nil
 }
+
+func (t *Todo) GetByUser(ctx context.Context, userID int64) ([]model.Todo, error) {
+	results := []model.Todo{}
+	rows, err := t.conn.Query(ctx, "SELECT id, user_id, content, created_at FROM todos WHERE user_id = $1", userID)
+	if err != nil {
+		return nil, fmt.Errorf("select failed: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		result := model.Todo{}
+		if err := rows.Scan(&result.ID, &result.UserID, &result.Content, &result.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan failed: %w", err)
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
